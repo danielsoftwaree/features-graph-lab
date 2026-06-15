@@ -45,25 +45,25 @@ export function CaseAppMockup() {
 
 				{/* card form */}
 				<div className="flex flex-col gap-3">
-					<label className="flex flex-col gap-1.5 text-xs font-medium text-muted-foreground">
+					<div className="flex flex-col gap-1.5 text-xs font-medium text-muted-foreground">
 						Card number
 						<div className="rounded-md border border-border bg-background px-3 py-2.5 text-sm text-foreground">
 							4242 4242 4242 4242
 						</div>
-					</label>
+					</div>
 					<div className="flex gap-3">
-						<label className="flex flex-1 flex-col gap-1.5 text-xs font-medium text-muted-foreground">
+						<div className="flex flex-1 flex-col gap-1.5 text-xs font-medium text-muted-foreground">
 							Expiry
 							<div className="rounded-md border border-border bg-background px-3 py-2.5 text-sm text-foreground">
 								04 / 27
 							</div>
-						</label>
-						<label className="flex flex-1 flex-col gap-1.5 text-xs font-medium text-muted-foreground">
+						</div>
+						<div className="flex flex-1 flex-col gap-1.5 text-xs font-medium text-muted-foreground">
 							CVC
 							<div className="rounded-md border border-border bg-background px-3 py-2.5 text-sm text-foreground">
 								123
 							</div>
-						</label>
+						</div>
 					</div>
 				</div>
 
