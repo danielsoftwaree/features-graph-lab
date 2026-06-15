@@ -1,12 +1,27 @@
-import { WireBox } from "@/shared/components/ui/wire-box";
+import { Link } from "@tanstack/react-router";
+import { ArrowLeft, Github } from "lucide-react";
+import { Button } from "@/shared/components/ui/button";
+import { ThemeToggle } from "@/shared/components/ui/theme-toggle";
+
+const REPO_URL = "https://github.com/danielsoftwaree/features-graph-lab";
 
 export function CaseTopbar() {
 	return (
 		<div className="flex items-center justify-between px-6 py-4">
-			<WireBox label="← Back to cases" className="h-8 w-36" />
+			<Button asChild variant="ghost" size="sm">
+				<Link to="/">
+					<ArrowLeft />
+					Back to cases
+				</Link>
+			</Button>
 			<div className="flex items-center gap-3">
-				<WireBox label="View source on GitHub" className="h-8 w-44" />
-				<WireBox label="☾" className="h-8 w-8" />
+				<Button asChild variant="outline" size="sm">
+					<a href={REPO_URL} target="_blank" rel="noreferrer noopener">
+						<Github />
+						View source on GitHub
+					</a>
+				</Button>
+				<ThemeToggle />
 			</div>
 		</div>
 	);
