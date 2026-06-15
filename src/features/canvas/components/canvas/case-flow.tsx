@@ -9,9 +9,13 @@ import {
 import "@xyflow/react/dist/style.css";
 
 import type { FlowEdge, FlowNode as FlowNodeType } from "@/shared/types/flow";
-import { FlowNode } from "../flow-node";
+import { CATEGORY_MINIMAP_COLORS, FlowNode } from "../flow-node";
 
 const NODE_TYPES = { flow: FlowNode };
+
+function minimapNodeColor(node: FlowNodeType) {
+	return CATEGORY_MINIMAP_COLORS[node.data.category];
+}
 
 interface CaseFlowProps {
 	nodes: FlowNodeType[];
@@ -21,8 +25,8 @@ interface CaseFlowProps {
 export function CaseFlow({ nodes, edges }: CaseFlowProps) {
 	return (
 		<ReactFlow
-			nodes={nodes}
-			edges={edges}
+			defaultNodes={nodes}
+			defaultEdges={edges}
 			nodeTypes={NODE_TYPES}
 			fitView
 			fitViewOptions={{ padding: 0.2 }}
@@ -30,7 +34,13 @@ export function CaseFlow({ nodes, edges }: CaseFlowProps) {
 			className="bg-background"
 		>
 			<Background variant={BackgroundVariant.Dots} gap={20} size={2} />
-			<MiniMap pannable zoomable className="bottom-4! right-4!" />
+			<MiniMap
+				position="bottom-left"
+				pannable
+				zoomable
+				nodeColor={minimapNodeColor}
+				nodeStrokeColor={minimapNodeColor}
+			/>
 		</ReactFlow>
 	);
 }

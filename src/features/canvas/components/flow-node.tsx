@@ -10,6 +10,17 @@ const CATEGORY_STYLES: Record<FlowNodeType["data"]["category"], string> = {
 	failure: "border-destructive bg-destructive-surface text-destructive",
 };
 
+export const CATEGORY_MINIMAP_COLORS: Record<
+	FlowNodeType["data"]["category"],
+	string
+> = {
+	user: "#3b82f6",
+	system: "#16a34a",
+	external: "#71717a",
+	critical: "#f59e0b",
+	failure: "#dc2626",
+};
+
 export function FlowNode({ data }: NodeProps<FlowNodeType>) {
 	const { step, icon, title, description, owner, category } = data;
 
