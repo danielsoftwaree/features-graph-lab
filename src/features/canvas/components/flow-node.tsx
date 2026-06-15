@@ -1,6 +1,6 @@
 import { Handle, type NodeProps, Position } from "@xyflow/react";
 import { cn } from "@/shared/lib/cn";
-import type { FlowNode as FlowNodeType } from "../data/payment-flow";
+import type { FlowNode as FlowNodeType } from "@/shared/types/flow";
 
 const CATEGORY_STYLES: Record<FlowNodeType["data"]["category"], string> = {
 	user: "border-primary/60 text-primary bg-primary/5",

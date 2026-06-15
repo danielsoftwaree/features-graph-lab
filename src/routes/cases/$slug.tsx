@@ -18,5 +18,6 @@ export const Route = createFileRoute("/cases/$slug")({
 });
 
 function CasePage() {
-	return <CaseShell canvas={<CaseFlow />} />;
+	const caseData = Route.useLoaderData();
+	return <CaseShell canvas={<CaseFlow nodes={caseData.nodes} edges={caseData.edges} />} />;
 }

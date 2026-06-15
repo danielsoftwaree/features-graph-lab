@@ -1,4 +1,4 @@
-import type { Node, Edge } from '@xyflow/react'
+import type { FlowEdge, FlowNode } from '@/shared/types/flow'
 
 export type CaseStatus = 'available' | 'coming-soon'
 
@@ -18,8 +18,8 @@ export type CaseData = {
   slug: string
   title: string
   businessSituation: string
-  nodes: Node[]
-  edges: Edge[]
+  nodes: FlowNode[]
+  edges: FlowEdge[]
   criticalNodeId: string
   testResults: TestResult[]
   businessImpact: string[]
