@@ -2,13 +2,13 @@
 
 ## Project
 
-Next.js + TypeScript app. Visual pipeline explorer for business logic cases.
-Stack: Next.js (App Router), TypeScript, @xyflow/react, Tailwind CSS.
+TanStack Start + TypeScript app. Visual pipeline explorer for business logic cases.
+Stack: TanStack Start, TanStack Router (file-based), React 19, @xyflow/react, Tailwind CSS v4, Biome.
 No backend. No auth. No database. Static local data only.
 
 ## Naming
 
-- Files and folders: `kebab-case` (e.g. `case-card.tsx`, `double-charge/page.tsx`).
+- Files and folders: `kebab-case` (e.g. `case-card.tsx`, `$slug.tsx`).
 - Components: `PascalCase`.
 - Variables and functions: `camelCase`.
 - Types and interfaces: `PascalCase`, no `I` prefix.
@@ -17,7 +17,7 @@ No backend. No auth. No database. Static local data only.
 
 - Delete dead code — do not comment it out, do not keep it "just in case".
 - No `any` in TypeScript. Use explicit types or `unknown`.
-- No default exports except Next.js pages and layouts.
+- No default exports except TanStack route files.
 - No barrel re-exports (`index.ts` that just re-exports) unless there are 4+ items.
 - No magic strings — put repeated literals in a `const` or type.
 - No TODO comments in committed code — either fix it or create a task.
@@ -35,7 +35,7 @@ No backend. No auth. No database. Static local data only.
 - God components (one component doing layout + state + data + logic).
 - Prop drilling more than 2 levels deep — use context or co-location.
 - `useEffect` for derived state — compute it inline or with `useMemo`.
-- Fetching data inside components — data lives in server components or static files.
+- Fetching data inside components — data lives in route loaders or static files.
 - Inline styles — use Tailwind classes.
 - Premature abstraction — do not create a generic utility for something used once.
 
@@ -48,8 +48,13 @@ Do not add loading states for static local data.
 
 ## Data
 
-Case data lives in `src/data/` as typed TypeScript objects.
+Case data lives in `src/features/cases/data/` as typed TypeScript objects.
 No API calls. No fetch. No async data in components.
+Route loaders resolve static data synchronously — no Suspense needed.
+
+## Path aliases
+
+`@/` maps to `src/`. Use `@/features/...`, `@/shared/...` for all cross-folder imports.
 
 ## Architecture — modular monolith
 
@@ -59,18 +64,18 @@ Each feature is a self-contained folder under `src/features/`. It owns its compo
 
 - A feature imports from `shared/`, never from another feature.
 - `shared/` contains only things used by 2+ features.
-- `app/` contains only Next.js routing files — no logic, no components.
-- Page files import from features, not from `shared/` directly.
+- `src/routes/` contains only TanStack Router files — no logic, no components.
+- Route files import from features, not from `shared/` directly.
 
 ### File structure
 
 ```
 src/
-  app/
-    page.tsx                        # imports from features/landing
+  routes/
+    __root.tsx                      # root shell
+    index.tsx                       # landing page → imports from features/landing
     cases/
-      [slug]/
-        page.tsx                    # imports from features/cases
+      $slug.tsx                     # case page → imports from features/cases + canvas
   features/
     landing/
       components/
@@ -86,8 +91,6 @@ src/
         fake-test-panel.tsx
       data/
         double-charge.ts
-        referral-abuse.ts
-        last-item-race.ts
       types/
         case.ts
     canvas/
@@ -105,6 +108,8 @@ src/
       index.ts
     lib/
       cn.ts                         # classname utility
+  integrations/
+    tanstack-query/                 # devtools wiring
 ```
 
 ## Before implementing
