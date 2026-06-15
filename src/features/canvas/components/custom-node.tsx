@@ -18,10 +18,10 @@ export function CustomNode({ data }: NodeProps) {
       className={cn(
         'rounded-lg border px-4 py-2 text-sm font-medium shadow-md transition-all',
         isMissing
-          ? 'border-dashed border-red-500 bg-red-950 text-red-400'
+          ? 'border-dashed border-destructive bg-destructive-surface text-destructive'
           : isCritical
-            ? 'border-yellow-500 bg-yellow-950 text-yellow-300'
-            : 'border-zinc-600 bg-zinc-800 text-zinc-100',
+            ? 'border-warning bg-warning-surface text-warning'
+            : 'border-border bg-muted text-foreground',
       )}
     >
       <Handle type="target" position={Position.Left} />

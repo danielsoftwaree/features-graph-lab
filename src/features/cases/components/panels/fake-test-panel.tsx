@@ -11,17 +11,17 @@ export function FakeTestPanel({ results, isBroken }: FakeTestPanelProps) {
     : results
 
   return (
-    <section className="mb-8 rounded-xl border border-zinc-700 bg-zinc-900 p-6 font-mono text-sm">
-      <h2 className="mb-4 font-sans text-sm font-semibold uppercase tracking-wider text-zinc-500">
+    <section className="mb-8 rounded-xl border border-border bg-card p-6 font-mono text-sm">
+      <h2 className="mb-4 font-sans text-sm font-semibold uppercase tracking-wider text-muted-foreground">
         Test Results
       </h2>
       <ul className="space-y-2">
         {displayResults.map((result) => (
           <li key={result.name} className="flex items-center gap-3">
-            <span className={result.passed ? 'text-green-400' : 'text-red-400'}>
+            <span className={result.passed ? 'text-success' : 'text-destructive'}>
               {result.passed ? '✓' : '✗'}
             </span>
-            <span className={result.passed ? 'text-zinc-300' : 'text-red-300 line-through'}>
+            <span className={result.passed ? 'text-foreground' : 'text-destructive line-through'}>
               {result.name}
             </span>
           </li>

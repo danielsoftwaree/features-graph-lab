@@ -25,7 +25,7 @@ const CASES: CaseMeta[] = [
 export function CasesSection() {
   return (
     <section className="mx-auto max-w-4xl px-4 pb-20">
-      <h2 className="mb-6 text-xl font-semibold text-zinc-300">Cases</h2>
+      <h2 className="mb-6 text-xl font-semibold text-foreground">Cases</h2>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {CASES.map((c) => (
           <CaseCard key={c.slug} caseMeta={c} />

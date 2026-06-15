@@ -13,8 +13,8 @@ export function BrokenModeToggle({ isBroken, onToggle }: BrokenModeToggleProps) 
       className={cn(
         'rounded-md px-4 py-2 text-sm font-medium transition-colors',
         isBroken
-          ? 'bg-red-600 text-white hover:bg-red-700'
-          : 'bg-zinc-800 text-zinc-200 hover:bg-zinc-700',
+          ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
+          : 'bg-muted text-foreground hover:bg-muted/80',
       )}
     >
       {isBroken ? 'Broken Mode ON' : 'Enable Broken Mode'}

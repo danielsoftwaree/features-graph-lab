@@ -14,8 +14,8 @@ export function CaseCard({ caseMeta }: CaseCardProps) {
       className={cn(
         'rounded-xl border p-6 transition-colors',
         isAvailable
-          ? 'border-zinc-700 bg-zinc-900 hover:border-zinc-500'
-          : 'cursor-not-allowed border-zinc-800 bg-zinc-900/40 opacity-60',
+          ? 'border-border bg-card hover:border-ring'
+          : 'cursor-not-allowed border-border bg-card/40 opacity-60',
       )}
     >
       {isAvailable ? (
@@ -33,12 +33,12 @@ function CardContent({ caseMeta }: { caseMeta: CaseMeta }) {
   return (
     <>
       <div className="mb-2 flex items-center justify-between">
-        <span className="text-xs font-medium text-zinc-500">
+        <span className="text-xs font-medium text-muted-foreground">
           {caseMeta.status === 'coming-soon' ? 'Coming soon' : 'Available'}
         </span>
       </div>
-      <h3 className="mb-1 font-semibold text-zinc-100">{caseMeta.title}</h3>
-      <p className="text-sm text-zinc-400">{caseMeta.description}</p>
+      <h3 className="mb-1 font-semibold text-foreground">{caseMeta.title}</h3>
+      <p className="text-sm text-muted-foreground">{caseMeta.description}</p>
     </>
   )
 }
