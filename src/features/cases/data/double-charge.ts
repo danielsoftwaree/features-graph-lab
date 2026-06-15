@@ -11,7 +11,7 @@ const nodes: FlowNode[] = [
   {
     id: 'checkout',
     type: 'flow',
-    position: { x: 0, y: 220 },
+    position: { x: 0, y: 280 },
     data: {
       step: '1',
       icon: '🛒',
@@ -24,7 +24,7 @@ const nodes: FlowNode[] = [
   {
     id: 'intent',
     type: 'flow',
-    position: { x: 240, y: 220 },
+    position: { x: 300, y: 280 },
     data: {
       step: '2',
       icon: '💳',
@@ -37,7 +37,7 @@ const nodes: FlowNode[] = [
   {
     id: 'send',
     type: 'flow',
-    position: { x: 480, y: 220 },
+    position: { x: 600, y: 280 },
     data: {
       step: '3',
       icon: '🌐',
@@ -50,7 +50,7 @@ const nodes: FlowNode[] = [
   {
     id: 'process',
     type: 'flow',
-    position: { x: 720, y: 220 },
+    position: { x: 900, y: 280 },
     data: {
       step: '4',
       icon: '🏦',
@@ -63,7 +63,7 @@ const nodes: FlowNode[] = [
   {
     id: 'webhook',
     type: 'flow',
-    position: { x: 960, y: 220 },
+    position: { x: 1200, y: 280 },
     data: {
       step: '5',
       icon: '🪝',
@@ -76,7 +76,7 @@ const nodes: FlowNode[] = [
   {
     id: 'guard',
     type: 'flow',
-    position: { x: 1200, y: 220 },
+    position: { x: 1500, y: 280 },
     data: {
       step: '6',
       icon: '🛡️',
@@ -89,7 +89,7 @@ const nodes: FlowNode[] = [
   {
     id: 'record',
     type: 'flow',
-    position: { x: 1460, y: 80 },
+    position: { x: 1820, y: 140 },
     data: {
       step: '7',
       icon: '🗄️',
@@ -102,7 +102,7 @@ const nodes: FlowNode[] = [
   {
     id: 'ignore',
     type: 'flow',
-    position: { x: 1460, y: 360 },
+    position: { x: 1820, y: 420 },
     data: {
       step: '7b',
       icon: '🚫',
@@ -115,7 +115,7 @@ const nodes: FlowNode[] = [
   {
     id: 'timeout',
     type: 'flow',
-    position: { x: 600, y: 0 },
+    position: { x: 760, y: 40 },
     data: {
       step: '!',
       icon: '⏱️',
@@ -132,7 +132,21 @@ const EDGE_BASE: Partial<FlowEdge> = { type: 'smoothstep' }
 const edges: FlowEdge[] = [
   { ...EDGE_BASE, id: 'e1', source: 'checkout', target: 'intent' },
   { ...EDGE_BASE, id: 'e2', source: 'intent', target: 'send' },
-  { ...EDGE_BASE, id: 'e3', source: 'send', target: 'process' },
+  {
+    ...EDGE_BASE,
+    id: 'e3',
+    source: 'send',
+    target: 'process',
+    data: { branch: 'deliver' },
+  },
+  {
+    ...EDGE_BASE,
+    id: 'e-lost',
+    source: 'send',
+    target: 'timeout',
+    data: { branch: 'lost' },
+    style: { strokeDasharray: '4 4' },
+  },
   { ...EDGE_BASE, id: 'e4', source: 'process', target: 'webhook' },
   { ...EDGE_BASE, id: 'e5', source: 'webhook', target: 'guard' },
   {
@@ -142,6 +156,7 @@ const edges: FlowEdge[] = [
     target: 'record',
     label: 'New Event',
     animated: true,
+    data: { branch: 'new' },
   },
   {
     ...EDGE_BASE,
@@ -149,6 +164,7 @@ const edges: FlowEdge[] = [
     source: 'guard',
     target: 'ignore',
     label: 'Duplicate',
+    data: { branch: 'duplicate' },
   },
   {
     ...EDGE_BASE,
@@ -168,6 +184,7 @@ export const doubleCharge: CaseData = {
     'Two identical requests hit the server. Both succeed. The user is charged twice.',
   nodes,
   edges,
+  entryNodeId: 'checkout',
   criticalNodeId: 'guard',
   testResults: [
     { name: 'Single charge on retry', passed: true },

@@ -20,6 +20,7 @@ export type CaseData = {
   businessSituation: string
   nodes: FlowNode[]
   edges: FlowEdge[]
+  entryNodeId: string
   criticalNodeId: string
   testResults: TestResult[]
   businessImpact: string[]

@@ -1,4 +1,10 @@
+"use client";
+
+import { useState } from "react";
 import { Button } from "@/shared/components/ui/button";
+import { useFlowRuntime } from "@/shared/flow-runtime";
+import { cn } from "@/shared/lib/cn";
+import type { GuardMode, PaymentWorld } from "../../data/double-charge.logic";
 
 const ORDER_ITEMS = [
 	{ name: "Pro Plan — Annual", price: "$480.00" },
@@ -7,7 +13,32 @@ const ORDER_ITEMS = [
 
 const TOTAL = "$600.00";
 
+const MODES: { value: GuardMode; label: string }[] = [
+	{ value: "broken", label: "Broken" },
+	{ value: "fixed", label: "Fixed" },
+];
+
+function modeButtonClass(active: boolean): string {
+	return cn(
+		"flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50",
+		active
+			? "bg-card text-foreground shadow-sm"
+			: "text-muted-foreground hover:text-foreground",
+	);
+}
+
 export function CaseAppMockup() {
+	const { status, world, play, reset } = useFlowRuntime();
+	const [mode, setMode] = useState<GuardMode>("broken");
+
+	const payment = world as PaymentWorld | null;
+	const chargeCount = payment?.charges.length ?? 0;
+	const isRunning = status === "running";
+	const isDone = status === "done";
+	const isDoubleCharge = isDone && chargeCount > 1;
+	const isSuccess = isDone && chargeCount === 1;
+	const payLabel = isRunning ? "Processing…" : `Pay ${TOTAL}`;
+
 	return (
 		<aside className="flex w-96 shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm">
 			{/* browser chrome — signals "the real app" */}
@@ -67,18 +98,63 @@ export function CaseAppMockup() {
 					</div>
 				</div>
 
-				<Button size="lg" className="w-full">
-					Pay {TOTAL}
+				{/* which guard implementation the engine runs */}
+				<div className="flex items-center gap-1 rounded-lg border border-border bg-muted/30 p-1">
+					{MODES.map((option) => (
+						<button
+							key={option.value}
+							type="button"
+							disabled={isRunning}
+							onClick={() => setMode(option.value)}
+							className={modeButtonClass(mode === option.value)}
+						>
+							Idempotency: {option.label}
+						</button>
+					))}
+				</div>
+
+				<Button
+					size="lg"
+					className="w-full"
+					disabled={isRunning}
+					onClick={() => play(mode)}
+				>
+					{payLabel}
 				</Button>
 
-				{/* the symptom the case explains */}
-				<div className="flex items-start gap-2.5 rounded-lg border border-destructive bg-destructive-surface px-3.5 py-3 text-sm text-destructive">
-					<span aria-hidden>⚠</span>
-					<div>
-						<p className="font-medium">Charged twice — {TOTAL} ×2</p>
-						<p className="text-destructive/80">A network retry submitted the payment again.</p>
+				{isDoubleCharge && (
+					<div className="flex items-start gap-2.5 rounded-lg border border-destructive bg-destructive-surface px-3.5 py-3 text-sm text-destructive">
+						<span aria-hidden>⚠</span>
+						<div>
+							<p className="font-medium">Charged twice — {TOTAL} ×2</p>
+							<p className="text-destructive/80">
+								A network retry submitted the payment again.
+							</p>
+						</div>
 					</div>
-				</div>
+				)}
+
+				{isSuccess && (
+					<div className="flex items-start gap-2.5 rounded-lg border border-success/50 bg-success/10 px-3.5 py-3 text-sm text-success">
+						<span aria-hidden>✓</span>
+						<div>
+							<p className="font-medium">Charged once — {TOTAL}</p>
+							<p className="text-success/80">
+								The retry hit the idempotency guard and was ignored.
+							</p>
+						</div>
+					</div>
+				)}
+
+				{isDone && (
+					<button
+						type="button"
+						onClick={reset}
+						className="self-start text-xs text-muted-foreground underline-offset-2 hover:underline"
+					>
+						Reset
+					</button>
+				)}
 			</div>
 		</aside>
 	);

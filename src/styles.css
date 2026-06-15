@@ -173,3 +173,41 @@
 	--xy-minimap-background-color: var(--card);
 	--xy-minimap-mask-background-color: color-mix(in oklab, var(--background) 65%, transparent);
 }
+
+/* Running-node border: a conic-gradient ring painted only on the border (padding
+   + mask-exclude) whose fill sweeps 0 → 100% over one engine wave. --flow-duration
+   is set per node so it stays in sync with FLOW_STEP_MS. */
+@property --flow-fill {
+	syntax: "<percentage>";
+	inherits: false;
+	initial-value: 0%;
+}
+
+@keyframes flow-border-fill {
+	from {
+		--flow-fill: 0%;
+	}
+	to {
+		--flow-fill: 100%;
+	}
+}
+
+.flow-node-running::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	padding: 2px;
+	background: conic-gradient(
+		from -90deg,
+		var(--primary) var(--flow-fill),
+		color-mix(in srgb, var(--primary) 18%, transparent) 0
+	);
+	-webkit-mask:
+		linear-gradient(#fff 0 0) content-box,
+		linear-gradient(#fff 0 0);
+	-webkit-mask-composite: xor;
+	mask-composite: exclude;
+	animation: flow-border-fill var(--flow-duration, 700ms) linear forwards;
+	pointer-events: none;
+}
