@@ -42,6 +42,9 @@
 
 	--success: #16a34a;
 
+	/* Accent for the live flow: running border + travelling edge. */
+	--flow-accent: #0d9488;
+
 	/* shadcn/ui primitives — mapped onto the existing zinc palette. */
 	--secondary: #f4f4f5;
 	--secondary-foreground: #18181b;
@@ -83,6 +86,8 @@
 
 	--success: #4ade80;
 
+	--flow-accent: #2dd4bf;
+
 	/* shadcn/ui primitives — dark. */
 	--secondary: #27272a;
 	--secondary-foreground: #f4f4f5;
@@ -122,6 +127,7 @@
 	--color-warning-border: var(--warning-border);
 
 	--color-success: var(--success);
+	--color-flow-accent: var(--flow-accent);
 
 	--color-secondary: var(--secondary);
 	--color-secondary-foreground: var(--secondary-foreground);
@@ -160,7 +166,7 @@
    automatically — no `colorMode` prop juggling required. */
 .react-flow {
 	--xy-background-pattern-color: var(--border);
-	--xy-edge-stroke: var(--muted-foreground);
+	--xy-edge-stroke: color-mix(in srgb, var(--muted-foreground) 35%, transparent);
 	--xy-edge-stroke-selected: var(--foreground);
 	--xy-attribution-background-color: transparent;
 
@@ -174,21 +180,46 @@
 	--xy-minimap-mask-background-color: color-mix(in oklab, var(--background) 65%, transparent);
 }
 
-/* Running-node border: a conic-gradient ring painted only on the border (padding
-   + mask-exclude) whose fill sweeps 0 → 100% over one engine wave. --flow-duration
-   is set per node so it stays in sync with FLOW_STEP_MS. */
-@property --flow-fill {
-	syntax: "<percentage>";
-	inherits: false;
-	initial-value: 0%;
+/* Connection dots: white-centred rings like the reference. The invisible
+   top/bottom handles (opacity-0) stay hidden; only the left/right anchors show. */
+.react-flow .react-flow__handle {
+	width: 9px;
+	height: 9px;
+	border: 2px solid color-mix(in srgb, var(--muted-foreground) 40%, transparent);
+	background: var(--card);
 }
 
-@keyframes flow-border-fill {
+/* Ease the edge colour change and give the travelling token a soft halo so the
+   flow reads smoothly instead of snapping on and off. */
+.react-flow__edge-path {
+	transition: stroke 250ms ease;
+}
+
+.flow-edge-token {
+	filter: drop-shadow(0 0 4px var(--flow-accent));
+}
+
+/* Running-node border: a soft teal arc rotates continuously around the border
+   (painted only on the border via padding + mask-exclude) while the node is
+   pending — a calm "working" loop rather than a one-shot fill. */
+@property --flow-angle {
+	syntax: "<angle>";
+	inherits: false;
+	initial-value: 0deg;
+}
+
+@keyframes flow-border-spin {
+	to {
+		--flow-angle: 360deg;
+	}
+}
+
+@keyframes flow-border-in {
 	from {
-		--flow-fill: 0%;
+		opacity: 0;
 	}
 	to {
-		--flow-fill: 100%;
+		opacity: 1;
 	}
 }
 
@@ -199,15 +230,19 @@
 	border-radius: inherit;
 	padding: 2px;
 	background: conic-gradient(
-		from -90deg,
-		var(--primary) var(--flow-fill),
-		color-mix(in srgb, var(--primary) 18%, transparent) 0
+		from var(--flow-angle),
+		color-mix(in srgb, var(--flow-accent) 16%, transparent),
+		var(--flow-accent) 70deg,
+		color-mix(in srgb, var(--flow-accent) 16%, transparent) 150deg,
+		color-mix(in srgb, var(--flow-accent) 16%, transparent)
 	);
 	-webkit-mask:
 		linear-gradient(#fff 0 0) content-box,
 		linear-gradient(#fff 0 0);
 	-webkit-mask-composite: xor;
 	mask-composite: exclude;
-	animation: flow-border-fill var(--flow-duration, 700ms) linear forwards;
+	animation:
+		flow-border-spin 1.6s linear infinite,
+		flow-border-in 260ms ease-out;
 	pointer-events: none;
 }

@@ -22,6 +22,7 @@ export function DataEdge({
 }: EdgeProps<FlowEdge>) {
 	const [path, labelX, labelY] = getSmoothStepPath(geometry);
 	const active = data?.active ?? false;
+	const traveled = data?.traveled ?? false;
 	const speedMs = data?.speedMs ?? FLOW_STEP_MS;
 
 	return (
@@ -30,11 +31,29 @@ export function DataEdge({
 				id={id}
 				path={path}
 				markerEnd={markerEnd}
-				className={cn(active && "stroke-primary!")}
+				className={cn(
+					active && "stroke-flow-accent!",
+					!active && traveled && "stroke-flow-accent/55!",
+				)}
 			/>
 			{active && (
-				<circle r={4} className="fill-primary">
-					<animateMotion dur={`${speedMs}ms`} repeatCount="1" path={path} />
+				<circle r={5} className="fill-flow-accent flow-edge-token">
+					<animate
+						attributeName="opacity"
+						values="0;1;1;0"
+						keyTimes="0;0.2;0.8;1"
+						dur={`${speedMs}ms`}
+						repeatCount="1"
+					/>
+					<animateMotion
+						dur={`${speedMs}ms`}
+						repeatCount="1"
+						path={path}
+						calcMode="spline"
+						keyTimes="0;1"
+						keyPoints="0;1"
+						keySplines="0.42 0 0.58 1"
+					/>
 				</circle>
 			)}
 			{label && (

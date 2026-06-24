@@ -12,11 +12,11 @@ export type PaymentWorld = {
 	charges: Charge[];
 };
 
-type PaymentRequest = { amount: number; key: string; retry: boolean };
+type PaymentRequest = { amount: number; key: string; attempt: number };
 
 const ORDER_AMOUNT = 600;
-// One checkout mints one idempotency key; a network retry reuses the SAME key —
-// that is exactly what the guard is supposed to catch.
+// One checkout mints one idempotency key; the retry reuses the SAME key — that is
+// exactly what the guard is supposed to catch.
 const IDEMPOTENCY_KEY = "idem_4242";
 
 const checkout: NodeHandler<PaymentWorld> = () => ({
@@ -25,64 +25,24 @@ const checkout: NodeHandler<PaymentWorld> = () => ({
 			output: {
 				amount: ORDER_AMOUNT,
 				key: IDEMPOTENCY_KEY,
-				retry: false,
+				attempt: 1,
 			} satisfies PaymentRequest,
 		},
 	],
-	log: "order placed",
+	log: "user taps Pay once",
+});
+
+const api: NodeHandler<PaymentWorld> = (input) => ({
+	emit: [{ output: input }],
+	log: "charge request received",
 });
 
 const intent: NodeHandler<PaymentWorld> = (input) => ({
 	emit: [{ output: input }],
-	log: "payment intent created",
+	log: "intent created with key",
 });
 
-const send: NodeHandler<PaymentWorld> = (input) => {
-	const req = input as PaymentRequest;
-	if (req.retry) {
-		return {
-			emit: [{ handle: "deliver", output: req }],
-			log: "retried request delivered",
-		};
-	}
-	// First attempt: the provider receives the request, but our response is lost,
-	// so the same request will be retried with the same key.
-	return {
-		emit: [
-			{ handle: "deliver", output: req },
-			{ handle: "lost", output: { ...req, retry: true } satisfies PaymentRequest },
-		],
-		log: "sent — response lost",
-	};
-};
-
-const providerProcess: NodeHandler<PaymentWorld> = (input) => ({
-	emit: [{ output: input }],
-	log: "provider charged the card",
-});
-
-const webhook: NodeHandler<PaymentWorld> = (input) => ({
-	emit: [{ output: input }],
-	log: "webhook received",
-});
-
-const timeout: NodeHandler<PaymentWorld> = (input) => ({
-	emit: [{ output: input }],
-	log: "timeout — provider retries",
-});
-
-const record: NodeHandler<PaymentWorld> = (input, { world }) => {
-	const req = input as PaymentRequest;
-	world.charges.push({ amount: req.amount, key: req.key });
-	return { emit: [], log: `recorded charge #${world.charges.length}` };
-};
-
-const ignore: NodeHandler<PaymentWorld> = () => ({
-	emit: [],
-	log: "duplicate ignored",
-});
-
-// Broken: no check at all — every pass through the guard records a charge.
+// Broken: no check at all — every request that reaches the guard is charged.
 const guardBroken: NodeHandler<PaymentWorld> = (input) => ({
 	emit: [{ handle: "new", output: input }],
 	log: "no idempotency check",
@@ -101,6 +61,44 @@ const guardFixed: NodeHandler<PaymentWorld> = (input, { world }) => {
 	return { emit: [{ handle: "new", output: req }], log: `new key ${req.key}` };
 };
 
+// The point of no return: real money moves here, once per pass that reaches it.
+const charge: NodeHandler<PaymentWorld> = (input, { world }) => {
+	const req = input as PaymentRequest;
+	world.charges.push({ amount: req.amount, key: req.key });
+	return {
+		emit: [{ output: req }],
+		log: `card charged (#${world.charges.length})`,
+	};
+};
+
+const record: NodeHandler<PaymentWorld> = (input) => ({
+	emit: [{ output: input }],
+	log: "ledger written",
+});
+
+// The first attempt's response is lost (→ network/retry); the retry's is fine.
+const confirmResponse: NodeHandler<PaymentWorld> = (input) => {
+	const req = input as PaymentRequest;
+	if (req.attempt === 1) {
+		return { emit: [{ handle: "lost", output: req }], log: "response lost" };
+	}
+	return { emit: [], log: "confirmed to client" };
+};
+
+// The failure node: the lost response makes the client retry with the SAME key.
+const network: NodeHandler<PaymentWorld> = (input) => {
+	const req = input as PaymentRequest;
+	return {
+		emit: [{ output: { ...req, attempt: 2 } satisfies PaymentRequest }],
+		log: "timeout — client retries",
+	};
+};
+
+const ignore: NodeHandler<PaymentWorld> = () => ({
+	emit: [],
+	log: "duplicate skipped",
+});
+
 export function createPaymentWorld(): PaymentWorld {
 	return { processedKeys: new Set(), charges: [] };
 }
@@ -110,13 +108,13 @@ export function createPaymentHandlers(
 ): Record<string, NodeHandler<PaymentWorld>> {
 	return {
 		checkout,
+		api,
 		intent,
-		send,
-		process: providerProcess,
-		webhook,
-		timeout,
-		record,
-		ignore,
 		guard: mode === "broken" ? guardBroken : guardFixed,
+		charge,
+		record,
+		confirm: confirmResponse,
+		network,
+		ignore,
 	};
 }

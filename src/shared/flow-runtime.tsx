@@ -27,6 +27,7 @@ export type FlowRuntimeValue = {
 	mode: string | null;
 	nodeStatus: Record<string, FlowNodeStatus>;
 	activeEdgeIds: Set<string>;
+	traveledEdgeIds: Set<string>;
 	edgePayloads: Record<string, unknown>;
 	world: unknown;
 	play: (mode: string) => void;
@@ -40,6 +41,7 @@ const INITIAL_STATE: RuntimeState = {
 	mode: null,
 	nodeStatus: {},
 	activeEdgeIds: new Set(),
+	traveledEdgeIds: new Set(),
 	edgePayloads: {},
 	world: null,
 };
@@ -82,6 +84,7 @@ export function FlowRuntimeProvider<World>({
 				mode,
 				nodeStatus: {},
 				activeEdgeIds: new Set(),
+				traveledEdgeIds: new Set(),
 				edgePayloads: {},
 				world,
 			});
@@ -140,15 +143,14 @@ function advance(prev: RuntimeState, event: StepEvent): RuntimeState {
 	// transit: nodes finished, their tokens now travel the edges onward.
 	for (const id of event.nodes) nodeStatus[id] = "done";
 	const edgePayloads: Record<string, unknown> = {};
+	const activeEdgeIds = new Set<string>();
+	const traveledEdgeIds = new Set(prev.traveledEdgeIds);
 	for (const travel of event.travels) {
 		edgePayloads[travel.edgeId] = travel.payload;
+		activeEdgeIds.add(travel.edgeId);
+		traveledEdgeIds.add(travel.edgeId);
 	}
-	return {
-		...prev,
-		nodeStatus,
-		activeEdgeIds: new Set(event.travels.map((travel) => travel.edgeId)),
-		edgePayloads,
-	};
+	return { ...prev, nodeStatus, activeEdgeIds, traveledEdgeIds, edgePayloads };
 }
 
 function finish(prev: RuntimeState, world: unknown): RuntimeState {

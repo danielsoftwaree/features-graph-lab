@@ -27,7 +27,7 @@ interface CaseFlowProps {
 }
 
 export function CaseFlow({ nodes, edges }: CaseFlowProps) {
-	const { nodeStatus, activeEdgeIds } = useFlowRuntime();
+	const { nodeStatus, activeEdgeIds, traveledEdgeIds } = useFlowRuntime();
 
 	// Controlled nodes/edges derived from the runtime — no internal RF state, no
 	// effects: the runtime is the single source of truth for what is "live".
@@ -53,10 +53,11 @@ export function CaseFlow({ nodes, edges }: CaseFlowProps) {
 				data: {
 					...edge.data,
 					active: activeEdgeIds.has(edge.id),
+					traveled: traveledEdgeIds.has(edge.id),
 					speedMs: FLOW_STEP_MS,
 				},
 			})),
-		[edges, activeEdgeIds],
+		[edges, activeEdgeIds, traveledEdgeIds],
 	);
 
 	return (

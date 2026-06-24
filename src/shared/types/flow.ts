@@ -23,6 +23,7 @@ export type FlowNode = Node<FlowNodeData, "flow">;
 export type FlowEdgeData = {
 	branch?: string;
 	active?: boolean;
+	traveled?: boolean;
 	speedMs?: number;
 };
 
