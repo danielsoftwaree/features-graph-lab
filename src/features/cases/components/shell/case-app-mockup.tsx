@@ -123,7 +123,7 @@ export function CaseAppMockup() {
 				</Button>
 
 				{isDoubleCharge && (
-					<div className="flex items-start gap-2.5 rounded-lg border border-destructive bg-destructive-surface px-3.5 py-3 text-sm text-destructive">
+					<div className="flow-rise-in flex items-start gap-2.5 rounded-lg border border-destructive bg-destructive-surface px-3.5 py-3 text-sm text-destructive">
 						<span aria-hidden>⚠</span>
 						<div>
 							<p className="font-medium">Charged twice — {TOTAL} ×2</p>
@@ -135,7 +135,7 @@ export function CaseAppMockup() {
 				)}
 
 				{isSuccess && (
-					<div className="flex items-start gap-2.5 rounded-lg border border-success/50 bg-success/10 px-3.5 py-3 text-sm text-success">
+					<div className="flow-rise-in flex items-start gap-2.5 rounded-lg border border-success/50 bg-success/10 px-3.5 py-3 text-sm text-success">
 						<span aria-hidden>✓</span>
 						<div>
 							<p className="font-medium">Charged once — {TOTAL}</p>

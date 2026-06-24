@@ -187,33 +187,42 @@
 	height: 9px;
 	border: 2px solid color-mix(in srgb, var(--muted-foreground) 40%, transparent);
 	background: var(--card);
+	transition:
+		border-color 240ms ease,
+		background-color 240ms ease;
 }
 
-/* Ease the edge colour change and give the travelling token a soft halo so the
-   flow reads smoothly instead of snapping on and off. */
+/* A node the flow has touched (running or done) lights its connection dots, so
+   the hand-off from the node border into the edge reads as one continuous
+   signal rather than a grey dot suddenly sprouting a coloured line. */
+.react-flow .flow-node-live .react-flow__handle {
+	border-color: var(--flow-accent);
+	background-color: color-mix(in srgb, var(--flow-accent) 35%, var(--card));
+}
+
+/* Ease the edge colour change so it settles smoothly to the travelled tint. */
 .react-flow__edge-path {
 	transition: stroke 250ms ease;
 }
 
-.flow-edge-token {
-	filter: drop-shadow(0 0 4px var(--flow-accent));
+/* The bright edge colour draws on along the path — a quick line that shoots to
+   the next node — instead of the whole edge snapping to colour at once. */
+.flow-edge-draw {
+	fill: none;
+	stroke: var(--flow-accent);
+	stroke-width: 2;
+	stroke-linecap: round;
+	filter: drop-shadow(0 0 3px color-mix(in srgb, var(--flow-accent) 55%, transparent));
 }
 
-/* Running-node border: a soft teal arc rotates continuously around the border
-   (painted only on the border via padding + mask-exclude) while the node is
-   pending — a calm "working" loop rather than a one-shot fill. */
-@property --flow-angle {
-	syntax: "<angle>";
-	inherits: false;
-	initial-value: 0deg;
-}
-
-@keyframes flow-border-spin {
-	to {
-		--flow-angle: 360deg;
-	}
-}
-
+/* Running node: the border fills like a determinate progress bar, 0% → 100%,
+   over exactly one engine step (the node's "running" window) — not an
+   indeterminate spinner. It is an SVG stroke (see flow-node.tsx) with
+   pathLength normalised to 100, so the fill advances at a constant *linear*
+   speed around the real rounded-rect perimeter, corners included. A faint
+   full-perimeter track shows the not-yet-filled remainder, like a progress
+   track. (A conic gradient can't do this — it sweeps by angle, bunching on the
+   long edges and racing the short ones, which made the old border feel mushy.) */
 @keyframes flow-border-in {
 	from {
 		opacity: 0;
@@ -223,26 +232,72 @@
 	}
 }
 
-.flow-node-running::before {
-	content: "";
+@keyframes flow-border-fill {
+	from {
+		stroke-dashoffset: 100;
+	}
+	to {
+		stroke-dashoffset: 0;
+	}
+}
+
+.flow-node-progress {
 	position: absolute;
 	inset: 0;
-	border-radius: inherit;
-	padding: 2px;
-	background: conic-gradient(
-		from var(--flow-angle),
-		color-mix(in srgb, var(--flow-accent) 16%, transparent),
-		var(--flow-accent) 70deg,
-		color-mix(in srgb, var(--flow-accent) 16%, transparent) 150deg,
-		color-mix(in srgb, var(--flow-accent) 16%, transparent)
-	);
-	-webkit-mask:
-		linear-gradient(#fff 0 0) content-box,
-		linear-gradient(#fff 0 0);
-	-webkit-mask-composite: xor;
-	mask-composite: exclude;
-	animation:
-		flow-border-spin 1.6s linear infinite,
-		flow-border-in 260ms ease-out;
+	width: 100%;
+	height: 100%;
+	overflow: visible;
 	pointer-events: none;
+	animation: flow-border-in 240ms ease-out;
+}
+
+.flow-node-progress :is(rect, path) {
+	fill: none;
+	vector-effect: non-scaling-stroke;
+}
+
+.flow-node-progress-track {
+	stroke: color-mix(in srgb, var(--flow-accent) 22%, transparent);
+	stroke-width: 2;
+}
+
+.flow-node-progress-fill {
+	stroke: var(--flow-accent);
+	stroke-width: 2;
+	stroke-linecap: round;
+	stroke-dasharray: 100;
+	stroke-dashoffset: 100;
+	filter: drop-shadow(0 0 4px color-mix(in srgb, var(--flow-accent) 70%, transparent));
+	animation: flow-border-fill var(--flow-fill-ms, 800ms) linear forwards;
+}
+
+/* Result banners (charged once/twice) rise in softly so the payoff lands
+   instead of snapping into place. */
+@keyframes flow-rise-in {
+	from {
+		opacity: 0;
+		transform: translateY(8px);
+		filter: blur(4px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+		filter: blur(0);
+	}
+}
+
+.flow-rise-in {
+	animation: flow-rise-in 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Respect users who ask for less motion: collapse looping/decorative
+   animations and long transitions while keeping the UI fully functional. */
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+	}
 }

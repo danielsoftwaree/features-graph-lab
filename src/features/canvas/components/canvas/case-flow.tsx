@@ -9,7 +9,7 @@ import {
 import "@xyflow/react/dist/style.css";
 
 import { useMemo } from "react";
-import { FLOW_STEP_MS, useFlowRuntime } from "@/shared/flow-runtime";
+import { useFlowRuntime } from "@/shared/flow-runtime";
 import type { FlowEdge, FlowNode as FlowNodeType } from "@/shared/types/flow";
 import { CATEGORY_MINIMAP_COLORS, FlowNode } from "../flow-node";
 import { DataEdge } from "./data-edge";
@@ -54,7 +54,6 @@ export function CaseFlow({ nodes, edges }: CaseFlowProps) {
 					...edge.data,
 					active: activeEdgeIds.has(edge.id),
 					traveled: traveledEdgeIds.has(edge.id),
-					speedMs: FLOW_STEP_MS,
 				},
 			})),
 		[edges, activeEdgeIds, traveledEdgeIds],

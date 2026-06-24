@@ -16,6 +16,7 @@ export async function runFlow<World>(args: RunFlowArgs<World>): Promise<World> {
 		world,
 		signal,
 		stepMs = DEFAULT_STEP_MS,
+		edgeMs = stepMs,
 		onStep,
 	} = args;
 
@@ -70,7 +71,7 @@ export async function runFlow<World>(args: RunFlowArgs<World>): Promise<World> {
 		// Phase 2 — transit: the wave's nodes are done; their tokens travel to the
 		// next wave, which only lights up on its own execute phase.
 		onStep?.({ tick, phase: "transit", nodes: waveNodes, travels, logs: [] });
-		if (stepMs > 0 && next.length > 0) await delay(stepMs, ctxSignal);
+		if (edgeMs > 0 && next.length > 0) await delay(edgeMs, ctxSignal);
 		frontier = next;
 	}
 

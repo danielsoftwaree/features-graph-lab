@@ -6,13 +6,13 @@ import {
 	type EdgeProps,
 	getSmoothStepPath,
 } from "@xyflow/react";
-import { FLOW_STEP_MS } from "@/shared/flow-runtime";
+import { FLOW_EDGE_MS } from "@/shared/flow-runtime";
 import { cn } from "@/shared/lib/cn";
 import type { FlowEdge } from "@/shared/types/flow";
 
-// A smoothstep edge that, while a token is travelling it, runs a dot along the
-// exact edge path (SVG animateMotion). The dot is the real data moving to the
-// next node — its lifetime matches one engine wave.
+// A smoothstep edge. While active, the bright accent colour draws on along the
+// path — a quick line shooting to the next node — then settles to a faint
+// "travelled" tint once the wave moves on.
 export function DataEdge({
 	id,
 	data,
@@ -23,7 +23,6 @@ export function DataEdge({
 	const [path, labelX, labelY] = getSmoothStepPath(geometry);
 	const active = data?.active ?? false;
 	const traveled = data?.traveled ?? false;
-	const speedMs = data?.speedMs ?? FLOW_STEP_MS;
 
 	return (
 		<>
@@ -31,30 +30,28 @@ export function DataEdge({
 				id={id}
 				path={path}
 				markerEnd={markerEnd}
-				className={cn(
-					active && "stroke-flow-accent!",
-					!active && traveled && "stroke-flow-accent/55!",
-				)}
+				className={cn(traveled && "stroke-flow-accent/55!")}
 			/>
 			{active && (
-				<circle r={5} className="fill-flow-accent flow-edge-token">
+				<path
+					d={path}
+					className="flow-edge-draw"
+					pathLength={1}
+					strokeDasharray={1}
+					strokeDashoffset={1}
+				>
 					<animate
-						attributeName="opacity"
-						values="0;1;1;0"
-						keyTimes="0;0.2;0.8;1"
-						dur={`${speedMs}ms`}
-						repeatCount="1"
-					/>
-					<animateMotion
-						dur={`${speedMs}ms`}
-						repeatCount="1"
-						path={path}
+						attributeName="stroke-dashoffset"
+						from={1}
+						to={0}
+						dur={`${FLOW_EDGE_MS}ms`}
 						calcMode="spline"
 						keyTimes="0;1"
-						keyPoints="0;1"
 						keySplines="0.42 0 0.58 1"
+						repeatCount="1"
+						fill="freeze"
 					/>
-				</circle>
+				</path>
 			)}
 			{label && (
 				<EdgeLabelRenderer>

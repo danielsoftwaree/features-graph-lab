@@ -12,9 +12,9 @@ export function CaseCard({ caseMeta }: CaseCardProps) {
   return (
     <div
       className={cn(
-        'rounded-xl border p-6 transition-colors',
+        'rounded-xl border p-6 transition-[border-color,box-shadow,translate] duration-200',
         isAvailable
-          ? 'border-border bg-card hover:border-ring'
+          ? 'border-border bg-card hover:-translate-y-0.5 hover:border-ring hover:shadow-md'
           : 'cursor-not-allowed border-border bg-card/40 opacity-60',
       )}
     >

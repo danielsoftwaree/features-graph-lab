@@ -16,9 +16,12 @@ import type { FlowEdge, FlowNode, FlowNodeStatus } from "@/shared/types/flow";
 
 export type RuntimeStatus = "idle" | "running" | "done";
 
-// Animation cadence: the engine waits this long between waves, and edges animate
-// their travelling token over the same duration so motion and execution line up.
+// Animation cadence. A node stays "running" (its border fills) for FLOW_STEP_MS;
+// a token then crosses to the next node in FLOW_EDGE_MS. The engine uses these as
+// its execute/transit delays and DataEdge draws its line over FLOW_EDGE_MS, so the
+// next node starts the instant the line lands — no dead gap.
 export const FLOW_STEP_MS = 800;
+export const FLOW_EDGE_MS = 400;
 
 // What the UI reads. `world` is erased to `unknown` here so this shared module
 // never depends on a feature's domain type — the consuming feature casts it.
@@ -97,6 +100,7 @@ export function FlowRuntimeProvider<World>({
 				world,
 				signal: controller.signal,
 				stepMs,
+				edgeMs: FLOW_EDGE_MS,
 				onStep: (event) => setState((prev) => advance(prev, event)),
 			}).then((finalWorld) => {
 				if (controller.signal.aborted) return;

@@ -18,13 +18,12 @@ export type FlowNodeData = {
 export type FlowNode = Node<FlowNodeData, "flow">;
 
 // `branch` keys the edge for the engine (a node emits on a handle, the engine
-// follows only edges whose branch matches). `active`/`speedMs` are set by the
+// follows only edges whose branch matches). `active`/`traveled` are set by the
 // runtime while a token travels the edge, for the DataEdge animation.
 export type FlowEdgeData = {
 	branch?: string;
 	active?: boolean;
 	traveled?: boolean;
-	speedMs?: number;
 };
 
 export type FlowEdge = Edge<FlowEdgeData>;

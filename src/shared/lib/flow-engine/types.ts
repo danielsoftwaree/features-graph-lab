@@ -51,7 +51,9 @@ export type RunFlowArgs<World> = {
 	entry: string;
 	world: World;
 	signal?: AbortSignal;
-	// Delay between ticks so the animation is watchable. Pass 0 in tests.
+	// Delays so the animation is watchable: stepMs while a node runs, edgeMs while a
+	// token crosses to the next node. edgeMs defaults to stepMs. Pass 0 in tests.
 	stepMs?: number;
+	edgeMs?: number;
 	onStep?: (event: StepEvent) => void;
 };
