@@ -1,7 +1,4 @@
 import type { ReactNode } from "react";
-import { WireBox } from "@/shared/components/ui/wire-box";
-
-const TABS = ["Flow Overview", "Key Components", "Data & Events", "Failure Simulation", "Takeaways"];
 
 const LEGEND = [
 	{ label: "User Action", className: "bg-primary" },
@@ -18,17 +15,14 @@ interface CaseCanvasPanelProps {
 export function CaseCanvasPanel({ canvas }: CaseCanvasPanelProps) {
 	return (
 		<div className="flex flex-1 flex-col overflow-hidden rounded-lg border border-border">
-			{/* toolbar: tabs + zoom controls */}
-			<div className="flex items-center justify-between border-b border-border px-4 py-3">
-				<div className="flex items-center gap-2">
-					{TABS.map((tab) => (
-						<WireBox key={tab} label={tab} className="h-8 w-28" />
-					))}
-				</div>
-				<div className="flex items-center gap-2">
-					<WireBox label="−  100%  +" className="h-8 w-28" />
-					<WireBox label="⛶" className="h-8 w-8" />
-				</div>
+			{/* honest header — no fake tabs; zoom lives in the canvas Controls */}
+			<div className="flex flex-col border-b border-border px-4 py-3">
+				<span className="text-sm font-medium text-foreground">
+					Payment pipeline
+				</span>
+				<span className="text-xs text-muted-foreground">
+					Press Pay to watch the request flow through each step
+				</span>
 			</div>
 
 			{/* canvas: real node graph */}

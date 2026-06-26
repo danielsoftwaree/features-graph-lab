@@ -214,13 +214,108 @@ const edges: FlowEdge[] = [
   },
 ]
 
+// Per-node inspector content: what it does, the editable TypeScript that runs,
+// and — for the nodes in the bug — why this is where it breaks. The `code` is the
+// real handler the runtime compiles and executes (a bare arrow function, types
+// trimmed for the editor). `guard` ships BROKEN on purpose: pressing Pay charges
+// twice until you add the idempotency check yourself.
+const INSPECTOR: Record<
+  string,
+  { explanation: string; code: string; failureReason?: string }
+> = {
+  checkout: {
+    explanation:
+      'The user taps Pay once. It emits a single payment request carrying one freshly minted idempotency key.',
+    code: `() => ({
+  emit: [{
+    output: { amount: 600, key: 'idem_4242', attempt: 1 },
+  }],
+})`,
+  },
+  api: {
+    explanation:
+      'The server receives the charge request and forwards it inward. This is also where a retried request re-enters the pipeline.',
+    code: `(input) => ({
+  emit: [{ output: input }],
+})`,
+  },
+  intent: {
+    explanation:
+      'Creates a payment intent keyed by the idempotency key for this order.',
+    code: `(input) => ({
+  emit: [{ output: input }],
+})`,
+  },
+  guard: {
+    explanation:
+      'The idempotency guard decides whether this key was already processed. A new key is let through to Charge; a duplicate should be routed to a safe no-op ("duplicate" handle).',
+    code: `(req, { world }) => {
+  // 🐛 BROKEN: no idempotency check — every request is charged.
+  // Fix me: when world.processedKeys already has req.key, emit on the
+  // "duplicate" handle instead; otherwise add the key and emit "new".
+  return { emit: [{ handle: 'new', output: req }] }
+}`,
+    failureReason:
+      'As written, this node has no check — it emits every request on the "new" handle straight to Charge. So when the retry arrives with the same key, nothing stops it and the card is charged a second time. Add the processedKeys check to fix it.',
+  },
+  charge: {
+    explanation:
+      'Moves real money. Appends a charge to the world. This step is irreversible.',
+    code: `(req, { world }) => {
+  world.charges.push({ amount: req.amount, key: req.key })
+  return { emit: [{ output: req }] }
+}`,
+    failureReason:
+      'Nothing here is idempotent on its own — every pass that reaches this node creates another charge. The guarding has to happen before this point, never here.',
+  },
+  record: {
+    explanation: 'Persists the successful payment to the ledger.',
+    code: `(input) => ({
+  emit: [{ output: input }],
+})`,
+  },
+  confirm: {
+    explanation:
+      'Returns success to the client. On the first attempt the response is lost in transit and routes to the failure path.',
+    code: `(req) => {
+  if (req.attempt === 1) {
+    // first response is lost in transit
+    return { emit: [{ handle: 'lost', output: req }] }
+  }
+  return { emit: [] } // confirmed
+}`,
+    failureReason:
+      'The lost first response is the trigger: the client never hears back, so it retries — with the very same idempotency key.',
+  },
+  ignore: {
+    explanation:
+      'A safe no-op. A correct guard routes duplicate keys here instead of charging again, so the retry ends quietly.',
+    code: `() => ({ emit: [] })`,
+  },
+  network: {
+    explanation:
+      'The retry. Because the first response was lost, the browser resends the same request — now attempt 2, same key.',
+    code: `(req) => ({
+  // same key, just retried
+  emit: [{ output: { ...req, attempt: 2 } }],
+})`,
+    failureReason:
+      'This retry is harmless if the guard catches the duplicate. Without the guard it sails back through the pipeline and charges the card again.',
+  },
+}
+
+const enrichedNodes: FlowNode[] = nodes.map((node) => ({
+  ...node,
+  data: { ...node.data, ...INSPECTOR[node.id] },
+}))
+
 export const doubleCharge: CaseData = {
   slug: 'double-charge',
   title: 'Case 001: Double Charge',
   businessSituation:
     'A user submits a payment form. The network hiccups and the browser retries. ' +
     'Two identical requests hit the server. Both succeed. The user is charged twice.',
-  nodes,
+  nodes: enrichedNodes,
   edges,
   entryNodeId: 'checkout',
   criticalNodeId: 'guard',

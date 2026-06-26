@@ -12,8 +12,9 @@ import type {
 } from "@/shared/types/flow";
 
 // The icon sits in a soft pastel chip — the only place the card carries its
-// category colour, keeping the card itself a clean white surface.
-const ICON_STYLES: Record<FlowCategory, string> = {
+// category colour, keeping the card itself a clean white surface. Exported so the
+// node inspector can reuse the exact same chip for the node it shows.
+export const ICON_STYLES: Record<FlowCategory, string> = {
 	user: "bg-primary/10 text-primary",
 	system: "bg-success/10 text-success",
 	external: "bg-muted text-muted-foreground",
@@ -75,7 +76,7 @@ function progressPath(w: number, h: number, r: number): string {
 }
 
 export function FlowNode({ data }: NodeProps<FlowNodeType>) {
-	const { icon, title, description, category, status } = data;
+	const { icon, title, description, category, status, step, selected } = data;
 	const runStatus = status ?? "idle";
 	const tab = CATEGORY_TAB[category];
 	const [box, setBox] = useState<{ w: number; h: number } | null>(null);
@@ -87,9 +88,10 @@ export function FlowNode({ data }: NodeProps<FlowNodeType>) {
 		<div
 			ref={measure}
 			className={cn(
-				"relative w-56 rounded-xl border border-border bg-card px-3.5 py-3 shadow-sm transition-[box-shadow] duration-300 hover:shadow-md",
+				"relative w-56 cursor-pointer rounded-xl border border-border bg-card px-3.5 py-3 shadow-sm transition-[box-shadow] duration-300 hover:shadow-md",
 				runStatus !== "idle" && "flow-node-live",
 				STATUS_STYLES[runStatus],
+				selected && "ring-2 ring-primary ring-offset-2 ring-offset-background",
 			)}
 		>
 			{runStatus === "running" && (
@@ -137,6 +139,11 @@ export function FlowNode({ data }: NodeProps<FlowNodeType>) {
 				</span>
 			)}
 
+			{/* sequence marker — reads like a numbered step in the pipeline */}
+			<span className="absolute right-2.5 top-2.5 select-none font-mono text-[10px] text-muted-foreground/50">
+				{step}
+			</span>
+
 			<Handle id="in" type="target" position={Position.Left} />
 			<Handle
 				id="in-top"
@@ -154,7 +161,7 @@ export function FlowNode({ data }: NodeProps<FlowNodeType>) {
 				>
 					{icon}
 				</span>
-				<div className="min-w-0">
+				<div className="min-w-0 pr-4">
 					<div className="text-sm font-semibold leading-tight text-foreground">
 						{title}
 					</div>

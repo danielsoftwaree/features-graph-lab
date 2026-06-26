@@ -1,6 +1,11 @@
 import type { Edge, Node } from "@xyflow/react";
 
-export type FlowCategory = "user" | "system" | "external" | "critical" | "failure";
+export type FlowCategory =
+	| "user"
+	| "system"
+	| "external"
+	| "critical"
+	| "failure";
 
 // Set by the runtime while a flow runs; drives the node's highlight.
 export type FlowNodeStatus = "idle" | "running" | "done";
@@ -12,7 +17,13 @@ export type FlowNodeData = {
 	description: string;
 	owner: string;
 	category: FlowCategory;
+	// Inspector content — authored per node in the case data.
+	explanation?: string;
+	code?: string;
+	failureReason?: string;
+	// Injected by CaseFlow at render time.
 	status?: FlowNodeStatus;
+	selected?: boolean;
 };
 
 export type FlowNode = Node<FlowNodeData, "flow">;

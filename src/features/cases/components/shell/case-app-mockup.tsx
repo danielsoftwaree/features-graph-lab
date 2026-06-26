@@ -1,10 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import { Button } from "@/shared/components/ui/button";
 import { useFlowRuntime } from "@/shared/flow-runtime";
-import { cn } from "@/shared/lib/cn";
-import type { GuardMode, PaymentWorld } from "../../data/double-charge.logic";
+import type { PaymentWorld } from "../../data/double-charge.logic";
 
 const ORDER_ITEMS = [
 	{ name: "Pro Plan — Annual", price: "$480.00" },
@@ -13,28 +11,14 @@ const ORDER_ITEMS = [
 
 const TOTAL = "$600.00";
 
-const MODES: { value: GuardMode; label: string }[] = [
-	{ value: "broken", label: "Broken" },
-	{ value: "fixed", label: "Fixed" },
-];
-
-function modeButtonClass(active: boolean): string {
-	return cn(
-		"flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50",
-		active
-			? "bg-card text-foreground shadow-sm"
-			: "text-muted-foreground hover:text-foreground",
-	);
-}
-
 export function CaseAppMockup() {
-	const { status, world, play, reset } = useFlowRuntime();
-	const [mode, setMode] = useState<GuardMode>("broken");
+	const { status, world, error, play, reset } = useFlowRuntime();
 
 	const payment = world as PaymentWorld | null;
 	const chargeCount = payment?.charges.length ?? 0;
 	const isRunning = status === "running";
 	const isDone = status === "done";
+	const isError = status === "error";
 	const isDoubleCharge = isDone && chargeCount > 1;
 	const isSuccess = isDone && chargeCount === 1;
 	const payLabel = isRunning ? "Processing…" : `Pay ${TOTAL}`;
@@ -55,7 +39,9 @@ export function CaseAppMockup() {
 			<div className="flex flex-1 flex-col gap-5 overflow-y-auto p-5">
 				<div>
 					<h2 className="text-lg font-semibold text-foreground">Checkout</h2>
-					<p className="text-sm text-muted-foreground">Complete your purchase</p>
+					<p className="text-sm text-muted-foreground">
+						Complete your purchase
+					</p>
 				</div>
 
 				{/* order summary */}
@@ -98,29 +84,30 @@ export function CaseAppMockup() {
 					</div>
 				</div>
 
-				{/* which guard implementation the engine runs */}
-				<div className="flex items-center gap-1 rounded-lg border border-border bg-muted/30 p-1">
-					{MODES.map((option) => (
-						<button
-							key={option.value}
-							type="button"
-							disabled={isRunning}
-							onClick={() => setMode(option.value)}
-							className={modeButtonClass(mode === option.value)}
-						>
-							Idempotency: {option.label}
-						</button>
-					))}
-				</div>
-
 				<Button
 					size="lg"
 					className="w-full"
 					disabled={isRunning}
-					onClick={() => play(mode)}
+					onClick={play}
 				>
 					{payLabel}
 				</Button>
+
+				<p className="text-center text-xs text-muted-foreground">
+					Edit a node's code on the left, then Pay to run it.
+				</p>
+
+				{isError && error && (
+					<div className="flow-rise-in flex items-start gap-2.5 rounded-lg border border-destructive bg-destructive-surface px-3.5 py-3 text-sm text-destructive">
+						<span aria-hidden>✗</span>
+						<div className="min-w-0">
+							<p className="font-medium">
+								Code error{error.nodeId ? ` in ${error.nodeId}` : ""}
+							</p>
+							<p className="break-words text-destructive/80">{error.message}</p>
+						</div>
+					</div>
+				)}
 
 				{isDoubleCharge && (
 					<div className="flow-rise-in flex items-start gap-2.5 rounded-lg border border-destructive bg-destructive-surface px-3.5 py-3 text-sm text-destructive">
@@ -146,7 +133,7 @@ export function CaseAppMockup() {
 					</div>
 				)}
 
-				{isDone && (
+				{(isDone || isError) && (
 					<button
 						type="button"
 						onClick={reset}
